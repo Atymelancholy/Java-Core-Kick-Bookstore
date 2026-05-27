@@ -1,0 +1,31 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="en">
+<head>
+    <meta charset="UTF-8"/>
+    <meta name="viewport" content="width=device-width, initial-scale=1"/>
+    <title th:text="${msg.t('product.new')}">form</title>
+    <style>
+        body { font-family: system-ui, sans-serif; max-width: 720px; margin: 1rem auto; }
+        .nav { display: flex; gap: 1rem; flex-wrap: wrap; margin-bottom: 1rem; }
+        label { display: block; margin-top: .5rem; }
+        input, textarea { width: 100%; max-width: 28rem; }
+        button { margin-top: 1rem; }
+    </style>
+</head>
+<body>
+<div th:replace="~{fragments :: navbar}"></div>
+<h1 th:text="${product == null ? msg.t('product.new') : msg.t('product.edit')}">Form</h1>
+<form th:action="@{/app/products/form}" method="post">
+    <input type="hidden" name="id" th:if="${product != null}" th:value="${product.id}"/>
+    <label th:text="${msg.t('product.name')}">n</label>
+    <input name="name" required maxlength="255" th:value="${product != null ? product.name : ''}"/>
+    <label th:text="${msg.t('product.description')}">d</label>
+    <textarea name="description" rows="4" maxlength="2000" th:text="${product != null ? product.description : ''}"></textarea>
+    <label th:text="${msg.t('price.cents')}">p</label>
+    <input name="priceCents" type="number" min="1" max="10000000" required th:value="${product != null ? product.priceCents : ''}"/>
+    <label th:text="${msg.t('stock')}">s</label>
+    <input name="stock" type="number" min="0" max="1000000" required th:value="${product != null ? product.stock : ''}"/>
+    <button type="submit" th:text="${msg.t('product.save')}">save</button>
+</form>
+</body>
+</html>

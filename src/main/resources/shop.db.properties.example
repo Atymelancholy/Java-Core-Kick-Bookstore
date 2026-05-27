@@ -1,0 +1,4 @@
+# Copy to shop.db.properties (optional). Environment variables SHOP_JDBC_URL / SHOP_JDBC_USER / SHOP_JDBC_PASSWORD override these.
+jdbc.url=jdbc:postgresql://localhost:5432/shop
+jdbc.user=shop
+jdbc.password=shop

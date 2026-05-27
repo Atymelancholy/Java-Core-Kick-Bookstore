@@ -1,0 +1,28 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="en">
+<head>
+    <meta charset="UTF-8"/>
+    <meta name="viewport" content="width=device-width, initial-scale=1"/>
+    <title th:text="${msg.t('login.title')}">login</title>
+    <style>
+        body { font-family: system-ui, sans-serif; max-width: 720px; margin: 1rem auto; }
+        .nav { display: flex; gap: 1rem; flex-wrap: wrap; align-items: center; margin-bottom: 1rem; }
+        .flash { color: #b00020; margin-bottom: 1rem; }
+        label { display: block; margin-top: .5rem; }
+        input { width: 100%; max-width: 24rem; }
+        button { margin-top: 1rem; }
+    </style>
+</head>
+<body>
+<div th:replace="~{fragments :: navbar}"></div>
+<p class="flash" th:if="${flash != null}" th:text="${msg.t(flash)}"></p>
+<h1 th:text="${msg.t('login.title')}">Login</h1>
+<form th:action="@{/app/login}" method="post" autocomplete="on">
+    <label th:text="${msg.t('login.user')}">login</label>
+    <input name="login" required minlength="3" maxlength="64" pattern="[a-zA-Z0-9_]+"/>
+    <label th:text="${msg.t('login.password')}">password</label>
+    <input name="password" type="password" required minlength="1" maxlength="128"/>
+    <button type="submit" th:text="${msg.t('login.submit')}">go</button>
+</form>
+</body>
+</html>

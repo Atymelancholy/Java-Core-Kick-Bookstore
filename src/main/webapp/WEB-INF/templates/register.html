@@ -1,0 +1,32 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="en">
+<head>
+    <meta charset="UTF-8"/>
+    <meta name="viewport" content="width=device-width, initial-scale=1"/>
+    <title th:text="${msg.t('register.title')}">reg</title>
+    <style>
+        body { font-family: system-ui, sans-serif; max-width: 720px; margin: 1rem auto; }
+        .nav { display: flex; gap: 1rem; flex-wrap: wrap; align-items: center; margin-bottom: 1rem; }
+        .flash { color: #b00020; margin-bottom: 1rem; }
+        label { display: block; margin-top: .5rem; }
+        input { width: 100%; max-width: 24rem; }
+        button { margin-top: 1rem; }
+    </style>
+</head>
+<body>
+<div th:replace="~{fragments :: navbar}"></div>
+<p class="flash" th:if="${flash != null}" th:text="${msg.t(flash)}"></p>
+<h1 th:text="${msg.t('register.title')}">Register</h1>
+<form th:action="@{/app/register}" method="post" autocomplete="off">
+    <label th:text="${msg.t('login.user')}">login</label>
+    <input name="login" required minlength="3" maxlength="64" pattern="[a-zA-Z0-9_]+"/>
+    <label th:text="${msg.t('login.password')}">password</label>
+    <input name="password" type="password" required minlength="6" maxlength="128"/>
+    <label th:text="${msg.t('label.email')}">email</label>
+    <input name="email" type="email" required maxlength="255"/>
+    <label th:text="${msg.t('profile.displayName')}">name</label>
+    <input name="displayName" required maxlength="255"/>
+    <button type="submit" th:text="${msg.t('register.submit')}">go</button>
+</form>
+</body>
+</html>

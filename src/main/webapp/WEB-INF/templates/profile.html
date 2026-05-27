@@ -1,0 +1,28 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="en">
+<head>
+    <meta charset="UTF-8"/>
+    <meta name="viewport" content="width=device-width, initial-scale=1"/>
+    <title th:text="${msg.t('profile.title')}">profile</title>
+    <style>
+        body { font-family: system-ui, sans-serif; max-width: 720px; margin: 1rem auto; }
+        .nav { display: flex; gap: 1rem; flex-wrap: wrap; margin-bottom: 1rem; }
+        .flash { color: #b00020; }
+        label { display: block; margin-top: .5rem; }
+        input { width: 100%; max-width: 28rem; }
+        button { margin-top: 1rem; }
+    </style>
+</head>
+<body>
+<div th:replace="~{fragments :: navbar}"></div>
+<p class="flash" th:if="${flash != null}" th:text="${msg.t(flash)}"></p>
+<h1 th:text="${msg.t('profile.title')}">Profile</h1>
+<form th:action="@{/app/profile}" method="post">
+    <label th:text="${msg.t('label.email')}">email</label>
+    <input name="email" type="email" required maxlength="255" th:value="${user.email}"/>
+    <label th:text="${msg.t('profile.displayName')}">display</label>
+    <input name="displayName" required maxlength="255" th:value="${user.displayName}"/>
+    <button type="submit" th:text="${msg.t('profile.save')}">save</button>
+</form>
+</body>
+</html>

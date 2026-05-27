@@ -1,0 +1,23 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<body>
+<header th:fragment="navbar" class="nav">
+    <a th:href="@{/app/products}" th:text="${msg.t('nav.catalog')}">catalog</a>
+    <a th:if="${user != null}" th:href="@{/app/orders}" th:text="${msg.t('nav.orders')}">orders</a>
+    <a th:if="${user != null}" th:href="@{/app/profile}" th:text="${msg.t('nav.profile')}">profile</a>
+    <a th:if="${user != null}" th:href="@{/app/products/form}" th:text="${msg.t('nav.addProduct')}">add</a>
+    <span th:if="${user == null}">
+        <a th:href="@{/app/login}" th:text="${msg.t('nav.login')}">login</a>
+        <a th:href="@{/app/register}" th:text="${msg.t('nav.register')}">reg</a>
+    </span>
+    <form th:if="${user != null}" th:action="@{/app/logout}" method="post" style="display:inline">
+        <button type="submit" th:text="${msg.t('nav.logout')}">out</button>
+    </form>
+    <span class="lang" th:text="${msg.t('nav.lang')}">lang</span>
+    <a th:href="@{/app/products(lang=en)}">EN</a>
+    <a th:href="@{/app/products(lang=de)}">DE</a>
+    <a th:href="@{/app/products(lang=be)}">BE</a>
+    <a th:href="@{/app/products(lang=ru)}">RU</a>
+</header>
+</body>
+</html>
