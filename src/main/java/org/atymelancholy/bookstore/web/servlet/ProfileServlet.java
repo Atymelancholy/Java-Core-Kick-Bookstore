@@ -11,6 +11,7 @@ import org.atymelancholy.bookstore.model.UserAccount;
 import org.atymelancholy.bookstore.service.AuthService;
 import org.atymelancholy.bookstore.service.DomainException;
 import org.atymelancholy.bookstore.web.util.FormValidation;
+import org.atymelancholy.bookstore.web.util.ViewModel;
 import org.atymelancholy.bookstore.web.util.Views;
 
 import jakarta.servlet.ServletException;
@@ -21,33 +22,52 @@ import jakarta.servlet.http.HttpServletResponse;
 @WebServlet("/app/profile")
 public final class ProfileServlet extends BaseServlet {
 
-    private static final Logger LOG = LogManager.getLogger(ProfileServlet.class);
+    /** Logger. */
+    private static final Logger LOG =
+            LogManager.getLogger(ProfileServlet.class);
 
     @Override
-    protected void doGet(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
-        UserAccount user = AuthService.current(req.getSession(false)).orElseThrow();
-        UserAccount fresh = app().profiles().refresh(user.id()).orElse(user);
+    protected void doGet(final HttpServletRequest req,
+                         final HttpServletResponse resp)
+            throws ServletException, IOException {
+        UserAccount user = AuthService.current(req.getSession(false))
+                .orElseThrow();
         Map<String, Object> m = new HashMap<>();
-        m.put("user", user);
+        ViewModel.putUser(m, req.getSession(false));
         m.put("flash", LoginServlet.popFlash(req, "flashProfile"));
         Views.render(getServletContext(), req, resp, "profile", m);
     }
 
     @Override
-    protected void doPost(HttpServletRequest req, HttpServletResponse resp) throws IOException {
+    protected void doPost(final HttpServletRequest req,
+                          final HttpServletResponse resp)
+            throws IOException {
         try {
-            UserAccount user = AuthService.current(req.getSession(false)).orElseThrow();
-            String email = FormValidation.requireLen(req.getParameter("email"), 3, 255, "error.validation.email");
-            String displayName = FormValidation.requireLen(req.getParameter("displayName"), 1, 255, "error.validation.name");
-            UserAccount updated = app().profiles().update(user.id(), email, displayName);
+            UserAccount user = AuthService.current(req.getSession(false))
+                    .orElseThrow();
+            String email = FormValidation.requireLen(
+                    req.getParameter("email"),
+                    FormValidation.EMAIL_MIN_LEN,
+                    FormValidation.TEXT_MAX_LEN,
+                    "error.validation.email");
+            String displayName = FormValidation.requireLen(
+                    req.getParameter("displayName"),
+                    1,
+                    FormValidation.TEXT_MAX_LEN,
+                    "error.validation.name");
+            UserAccount updated = app().profiles().update(
+                    user.id(), email, displayName);
             req.getSession().setAttribute(WebKeys.CURRENT_USER, updated);
+            req.getSession().setAttribute("flashProfile", "profile.saved");
             resp.sendRedirect(req.getContextPath() + "/app/profile");
         } catch (DomainException e) {
-            req.getSession(true).setAttribute("flashProfile", e.messageKey());
+            req.getSession(true).setAttribute(
+                    "flashProfile", e.messageKey());
             resp.sendRedirect(req.getContextPath() + "/app/profile");
         } catch (Exception e) {
             LOG.error("profile", e);
-            req.getSession(true).setAttribute("flashProfile", "error.internal");
+            req.getSession(true).setAttribute(
+                    "flashProfile", "error.internal");
             resp.sendRedirect(req.getContextPath() + "/app/profile");
         }
     }

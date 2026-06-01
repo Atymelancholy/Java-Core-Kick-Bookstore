@@ -8,6 +8,7 @@ import jakarta.servlet.http.HttpServlet;
 abstract class BaseServlet extends HttpServlet {
 
     protected final AppServices app() {
-        return (AppServices) getServletContext().getAttribute(WebKeys.APP_SERVICES);
+        return (AppServices) getServletContext()
+                .getAttribute(WebKeys.APP_SERVICES);
     }
 }

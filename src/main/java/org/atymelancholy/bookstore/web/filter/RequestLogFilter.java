@@ -12,14 +12,19 @@ import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 
 /**
- * Adds structured request logging (can be extended for correlation ids / timing).
+ * Adds structured request logging.
+ * <p>Can be extended for correlation ids / timing.</p>
  */
 public final class RequestLogFilter extends HttpFilter {
 
-    private static final Logger LOG = LogManager.getLogger(RequestLogFilter.class);
+    /** Request logger (debug level). */
+    private static final Logger LOG =
+            LogManager.getLogger(RequestLogFilter.class);
 
     @Override
-    protected void doFilter(HttpServletRequest req, HttpServletResponse res, FilterChain chain)
+    protected void doFilter(final HttpServletRequest req,
+                            final HttpServletResponse res,
+                            final FilterChain chain)
             throws IOException, ServletException {
         LOG.debug("{} {}", req.getMethod(), req.getRequestURI());
         chain.doFilter(req, res);

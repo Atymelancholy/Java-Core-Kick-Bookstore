@@ -5,24 +5,103 @@
     <meta name="viewport" content="width=device-width, initial-scale=1"/>
     <title th:text="${msg.t('profile.title')}">profile</title>
     <style>
-        body { font-family: system-ui, sans-serif; max-width: 720px; margin: 1rem auto; }
-        .nav { display: flex; gap: 1rem; flex-wrap: wrap; margin-bottom: 1rem; }
-        .flash { color: #b00020; }
-        label { display: block; margin-top: .5rem; }
-        input { width: 100%; max-width: 28rem; }
-        button { margin-top: 1rem; }
+        body {
+            font-family: system-ui, sans-serif;
+            max-width: 720px;
+            margin: 1rem auto;
+            padding: 0 1rem;
+        }
     </style>
+    <div th:replace="~{fragments :: authFormStyles}"></div>
 </head>
 <body>
 <div th:replace="~{fragments :: navbar}"></div>
-<p class="flash" th:if="${flash != null}" th:text="${msg.t(flash)}"></p>
-<h1 th:text="${msg.t('profile.title')}">Profile</h1>
-<form th:action="@{/app/profile}" method="post">
-    <label th:text="${msg.t('label.email')}">email</label>
-    <input name="email" type="email" required maxlength="255" th:value="${user.email}"/>
-    <label th:text="${msg.t('profile.displayName')}">display</label>
-    <input name="displayName" required maxlength="255" th:value="${user.displayName}"/>
-    <button type="submit" th:text="${msg.t('profile.save')}">save</button>
-</form>
+
+<div class="auth-page">
+    <p class="auth-flash auth-flash--ok"
+       th:if="${flash != null and flash == 'profile.saved'}"
+       th:text="${msg.t(flash)}"></p>
+    <p class="auth-flash auth-flash--error"
+       th:if="${flash != null and flash != 'profile.saved'}"
+       th:text="${msg.t(flash)}"></p>
+
+    <form id="profile-form" class="auth-form" th:action="@{/app/profile}" method="post"
+          th:attr="data-btn-change=${msg.t('btn.profile.change')},
+                   data-btn-save=${msg.t('btn.profile.save')},
+                   data-btn-back=${labelGoBack}">
+        <div class="field">
+            <label th:text="${msg.t('label.email')}">email</label>
+            <input id="profile-email" name="email" type="email" required maxlength="255"
+                   readonly th:value="${user.email}"/>
+        </div>
+        <div class="field">
+            <label th:text="${msg.t('profile.displayName')}">display</label>
+            <input id="profile-display-name" name="displayName" required maxlength="255"
+                   readonly th:value="${user.displayName}"/>
+        </div>
+        <div class="form-actions">
+            <button type="button" class="btn" id="btn-main"
+                    th:text="${msg.t('btn.profile.change')}">change</button>
+            <button type="button" class="btn" id="btn-back" hidden
+                    th:text="${labelGoBack}">back</button>
+        </div>
+    </form>
+</div>
+
+<script>
+(function () {
+    var form = document.getElementById('profile-form');
+    var email = document.getElementById('profile-email');
+    var displayName = document.getElementById('profile-display-name');
+    var btnMain = document.getElementById('btn-main');
+    var btnBack = document.getElementById('btn-back');
+
+    var labelChange = form.getAttribute('data-btn-change');
+    var labelSave = form.getAttribute('data-btn-save');
+    var labelBack = form.getAttribute('data-btn-back');
+
+    var savedEmail = email.value;
+    var savedDisplayName = displayName.value;
+
+    function enterViewMode() {
+        email.readOnly = true;
+        displayName.readOnly = true;
+        btnMain.type = 'button';
+        btnMain.textContent = labelChange;
+        btnBack.hidden = true;
+    }
+
+    function enterEditMode() {
+        email.readOnly = false;
+        displayName.readOnly = false;
+        btnMain.type = 'submit';
+        btnMain.textContent = labelSave;
+        btnBack.hidden = false;
+        email.focus();
+    }
+
+    btnMain.addEventListener('click', function (e) {
+        if (btnMain.type === 'button') {
+            e.preventDefault();
+            savedEmail = email.value;
+            savedDisplayName = displayName.value;
+            enterEditMode();
+        }
+    });
+
+    btnBack.addEventListener('click', function () {
+        email.value = savedEmail;
+        displayName.value = savedDisplayName;
+        enterViewMode();
+    });
+
+    form.addEventListener('submit', function () {
+        email.readOnly = false;
+        displayName.readOnly = false;
+    });
+
+    enterViewMode();
+})();
+</script>
 </body>
 </html>

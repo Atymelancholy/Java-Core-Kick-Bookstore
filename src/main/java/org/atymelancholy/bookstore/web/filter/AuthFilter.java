@@ -17,10 +17,13 @@ import jakarta.servlet.http.HttpServletResponse;
  */
 public final class AuthFilter extends HttpFilter {
 
+    /** Authentication filter logger. */
     private static final Logger LOG = LogManager.getLogger(AuthFilter.class);
 
     @Override
-    protected void doFilter(HttpServletRequest req, HttpServletResponse res, FilterChain chain)
+    protected void doFilter(final HttpServletRequest req,
+                            final HttpServletResponse res,
+                            final FilterChain chain)
             throws IOException, ServletException {
         String path = req.getServletPath();
         String method = req.getMethod();
@@ -36,7 +39,7 @@ public final class AuthFilter extends HttpFilter {
         chain.doFilter(req, res);
     }
 
-    private static boolean isPublic(String path, String method) {
+    private static boolean isPublic(final String path, final String method) {
         if (path.equals("/app/login") || path.equals("/app/register")) {
             return true;
         }

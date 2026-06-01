@@ -1,23 +1,229 @@
 <!DOCTYPE html>
-<html xmlns:th="http://www.thymeleaf.org">
+<html xmlns:th="http://www.thymeleaf.org" lang="en">
 <body>
-<header th:fragment="navbar" class="nav">
-    <a th:href="@{/app/products}" th:text="${msg.t('nav.catalog')}">catalog</a>
-    <a th:if="${user != null}" th:href="@{/app/orders}" th:text="${msg.t('nav.orders')}">orders</a>
-    <a th:if="${user != null}" th:href="@{/app/profile}" th:text="${msg.t('nav.profile')}">profile</a>
-    <a th:if="${user != null}" th:href="@{/app/products/form}" th:text="${msg.t('nav.addProduct')}">add</a>
-    <span th:if="${user == null}">
-        <a th:href="@{/app/login}" th:text="${msg.t('nav.login')}">login</a>
-        <a th:href="@{/app/register}" th:text="${msg.t('nav.register')}">reg</a>
-    </span>
-    <form th:if="${user != null}" th:action="@{/app/logout}" method="post" style="display:inline">
-        <button type="submit" th:text="${msg.t('nav.logout')}">out</button>
-    </form>
-    <span class="lang" th:text="${msg.t('nav.lang')}">lang</span>
-    <a th:href="@{/app/products(lang=en)}">EN</a>
-    <a th:href="@{/app/products(lang=de)}">DE</a>
-    <a th:href="@{/app/products(lang=be)}">BE</a>
-    <a th:href="@{/app/products(lang=ru)}">RU</a>
-</header>
+<div th:fragment="navbar">
+    <style>
+        /* Full-width bar inside a centered, max-width page */
+        .site-header {
+            width: 100vw;
+            margin-left: calc(50% - 50vw);
+            margin-right: calc(50% - 50vw);
+            margin-top: -1rem;
+            margin-bottom: 2rem;
+            padding: 1.15rem 2.5rem;
+            box-sizing: border-box;
+            background: #ebebeb;
+            border-bottom: 1px solid #cfcfcf;
+        }
+        .site-header__inner {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 2rem;
+            flex-wrap: wrap;
+            max-width: 100%;
+        }
+        .site-header__brand {
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: #1a1a1a;
+            text-decoration: none;
+            white-space: nowrap;
+        }
+        .site-header__brand:hover {
+            color: #000;
+        }
+        .site-header__nav {
+            display: flex;
+            align-items: center;
+            justify-content: flex-end;
+            flex-wrap: wrap;
+            gap: 1.75rem;
+            margin-left: auto;
+        }
+        .site-header__nav > a,
+        .site-header__logout button {
+            color: #333;
+            text-decoration: none;
+            font-size: 1rem;
+            white-space: nowrap;
+        }
+        .site-header__nav > a:hover,
+        .site-header__logout button:hover {
+            color: #000;
+            text-decoration: underline;
+            text-underline-offset: 3px;
+        }
+        .site-header__lang {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            padding-left: 1.75rem;
+            border-left: 1px solid #bdbdbd;
+        }
+        .site-header__lang-label {
+            font-size: 0.9rem;
+            color: #666;
+        }
+        .site-header__lang a {
+            color: #333;
+            text-decoration: none;
+            font-size: 0.9rem;
+        }
+        .site-header__lang a:hover {
+            color: #000;
+            text-decoration: underline;
+            text-underline-offset: 3px;
+        }
+        .site-header__logout {
+            display: flex;
+            align-items: center;
+            margin: 0;
+            padding: 0;
+        }
+        .site-header__logout button {
+            font: inherit;
+            cursor: pointer;
+            background: none;
+            border: none;
+            padding: 0;
+        }
+        @media (max-width: 720px) {
+            .site-header {
+                padding: 1rem 1.25rem;
+            }
+            .site-header__inner {
+                flex-direction: column;
+                align-items: flex-start;
+            }
+            .site-header__nav {
+                justify-content: flex-start;
+                margin-left: 0;
+                gap: 1rem 1.25rem;
+            }
+        }
+    </style>
+
+    <header class="site-header">
+        <div class="site-header__inner">
+            <a class="site-header__brand" th:href="@{/app/products}">Bookstore</a>
+
+            <nav class="site-header__nav" aria-label="Main">
+                <a th:if="${user != null}"
+                   th:href="@{/app/products}"
+                   th:text="${msg.t('nav.catalog')}">Catalog</a>
+
+                <a th:if="${user != null}"
+                   th:href="@{/app/orders}"
+                   th:text="${msg.t('nav.orders')}">Orders</a>
+                <a th:if="${user != null}"
+                   th:href="@{/app/profile}"
+                   th:text="${msg.t('nav.profile')}">Profile</a>
+                <a th:if="${user != null and user.role == 'ADMIN'}"
+                   th:href="@{/app/products/form}"
+                   th:text="${msg.t('nav.addProduct')}">Add</a>
+
+                <a th:if="${user == null}"
+                   th:href="@{/app/login}"
+                   th:text="${msg.t('nav.login')}">Sign in</a>
+                <a th:if="${user == null}"
+                   th:href="@{/app/register}"
+                   th:text="${msg.t('nav.register')}">Sign up</a>
+
+                <span class="site-header__lang">
+                    <span class="site-header__lang-label" th:text="${msg.t('nav.lang')}">Lang</span>
+                    <a th:href="@{${currentPath}(lang='en')}">EN</a>
+                    <a th:href="@{${currentPath}(lang='ru')}">RU</a>
+                    <a th:href="@{${currentPath}(lang='be')}">BE</a>
+                </span>
+
+                <form th:if="${user != null}"
+                      th:action="@{/app/logout}"
+                      method="post"
+                      class="site-header__logout"
+                      th:attr="data-confirm=${msg.t('nav.logout.confirm')}"
+                      onsubmit="return confirm(this.getAttribute('data-confirm'));">
+                    <button type="submit" th:text="${msg.t('nav.logout')}">Sign out</button>
+                </form>
+            </nav>
+        </div>
+    </header>
+</div>
+
+<div th:fragment="authFormStyles">
+    <style>
+        .auth-page {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+        .auth-form {
+            width: 100%;
+            max-width: 28rem;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+        .auth-form .field {
+            width: 100%;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            margin-top: 1rem;
+        }
+        .auth-form .field label {
+            font-weight: 600;
+            text-align: center;
+            margin: 0 0 0.4rem;
+            min-height: 1.25rem;
+        }
+        .auth-form .field input {
+            width: 100%;
+            padding: 0.45rem 0.5rem;
+            font: inherit;
+            border: 1px solid #aaa;
+            border-radius: 4px;
+            box-sizing: border-box;
+            text-align: center;
+        }
+        .auth-form .field input:read-only {
+            background: #f7f7f7;
+            color: #333;
+            cursor: default;
+        }
+        .auth-form .form-actions {
+            width: 100%;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 0.75rem;
+            margin-top: 1.5rem;
+        }
+        .auth-form .btn {
+            display: inline-block;
+            font: inherit;
+            padding: 0.55rem 1.5rem;
+            border: 1px solid #888;
+            border-radius: 4px;
+            background: #f4f4f4;
+            color: #222;
+            text-decoration: none;
+            text-align: center;
+            box-sizing: border-box;
+            cursor: pointer;
+        }
+        .auth-form .btn:hover { background: #e8e8e8; }
+        .auth-form .btn[hidden] { display: none; }
+        .auth-flash {
+            width: 100%;
+            max-width: 28rem;
+            text-align: center;
+            margin-bottom: 1rem;
+        }
+        .auth-flash--error { color: #b00020; }
+        .auth-flash--ok { color: #1b5e20; }
+    </style>
+</div>
 </body>
 </html>

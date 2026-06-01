@@ -11,29 +11,103 @@ import org.atymelancholy.bookstore.model.Product;
  */
 public final class ProductService {
 
+    /** Default page size for catalog listing. */
+    public static final int PAGE_SIZE = 10;
+
+    /** DAO factory. */
     private final DaoFactory daoFactory;
 
-    public ProductService(DaoFactory daoFactory) {
-        this.daoFactory = daoFactory;
+    /**
+     * Creates product service.
+     *
+     * @param dao DAO factory
+     */
+    public ProductService(final DaoFactory dao) {
+        this.daoFactory = dao;
     }
 
+    /**
+     * List all products.
+     *
+     * @return list of products
+     */
     public List<Product> listAll() {
         return daoFactory.products().findAll();
     }
 
-    public Optional<Product> find(long id) {
+    /**
+     * Lists one catalog page (does not load the full catalog into memory).
+     *
+     * @param pageZeroBased page index starting from 0
+     * @return products for that page
+     */
+    public List<Product> listPage(final int pageZeroBased) {
+        int offset = Math.max(0, pageZeroBased) * PAGE_SIZE;
+        return daoFactory.products().findPage(PAGE_SIZE, offset);
+    }
+
+    /**
+     * Total number of products in the catalog.
+     *
+     * @return product count
+     */
+    public long productCount() {
+        return daoFactory.products().countAll();
+    }
+
+    /**
+     * Find product by id.
+     *
+     * @param id product id
+     * @return optional product
+     */
+    public Optional<Product> find(final long id) {
         return daoFactory.products().findById(id);
     }
 
-    public long create(String name, String description, int priceCents, int stock) {
-        return daoFactory.products().insert(name, description, priceCents, stock);
+    /**
+     * Create a new product.
+     *
+     * @param name name
+     * @param description description
+     * @param priceCents price in cents
+     * @param stock stock
+     * @return created id
+     */
+    public long create(final String name,
+                       final String description,
+                       final int priceCents,
+                       final int stock) {
+        return daoFactory.products().insert(
+                name,
+                description,
+                priceCents,
+                stock);
     }
 
-    public void update(long id, String name, String description, int priceCents, int stock) {
+    /**
+     * Update a product.
+     *
+     * @param id id
+     * @param name name
+     * @param description description
+     * @param priceCents price in cents
+     * @param stock stock
+     */
+    public void update(final long id,
+                       final String name,
+                       final String description,
+                       final int priceCents,
+                       final int stock) {
         daoFactory.products().update(id, name, description, priceCents, stock);
     }
 
-    public void delete(long id) {
+    /**
+     * Delete product.
+     *
+     * @param id id
+     */
+    public void delete(final long id) {
         daoFactory.products().delete(id);
     }
 }

@@ -3,30 +3,49 @@
 <head>
     <meta charset="UTF-8"/>
     <meta name="viewport" content="width=device-width, initial-scale=1"/>
-    <title th:text="${msg.t('register.title')}">reg</title>
+    <title th:text="${msg.t('register.title')}">register</title>
     <style>
-        body { font-family: system-ui, sans-serif; max-width: 720px; margin: 1rem auto; }
-        .nav { display: flex; gap: 1rem; flex-wrap: wrap; align-items: center; margin-bottom: 1rem; }
-        .flash { color: #b00020; margin-bottom: 1rem; }
-        label { display: block; margin-top: .5rem; }
-        input { width: 100%; max-width: 24rem; }
-        button { margin-top: 1rem; }
+        body {
+            font-family: system-ui, sans-serif;
+            max-width: 720px;
+            margin: 1rem auto;
+            padding: 0 1rem;
+        }
     </style>
+    <div th:replace="~{fragments :: authFormStyles}"></div>
 </head>
 <body>
 <div th:replace="~{fragments :: navbar}"></div>
-<p class="flash" th:if="${flash != null}" th:text="${msg.t(flash)}"></p>
-<h1 th:text="${msg.t('register.title')}">Register</h1>
-<form th:action="@{/app/register}" method="post" autocomplete="off">
-    <label th:text="${msg.t('login.user')}">login</label>
-    <input name="login" required minlength="3" maxlength="64" pattern="[a-zA-Z0-9_]+"/>
-    <label th:text="${msg.t('login.password')}">password</label>
-    <input name="password" type="password" required minlength="6" maxlength="128"/>
-    <label th:text="${msg.t('label.email')}">email</label>
-    <input name="email" type="email" required maxlength="255"/>
-    <label th:text="${msg.t('profile.displayName')}">name</label>
-    <input name="displayName" required maxlength="255"/>
-    <button type="submit" th:text="${msg.t('register.submit')}">go</button>
-</form>
+
+<div class="auth-page">
+    <p class="auth-flash auth-flash--error"
+       th:if="${flash != null}"
+       th:text="${msg.t(flash)}"></p>
+
+    <form class="auth-form" th:action="@{/app/register}" method="post" autocomplete="on">
+        <div class="field">
+            <label th:text="${msg.t('login.user')}">login</label>
+            <input name="login" required minlength="3" maxlength="64" autocomplete="username"/>
+        </div>
+        <div class="field">
+            <label th:text="${msg.t('login.password')}">password</label>
+            <input name="password" type="password" required minlength="6" maxlength="128"
+                   autocomplete="new-password"/>
+        </div>
+        <div class="field">
+            <label th:text="${msg.t('label.email')}">email</label>
+            <input name="email" type="email" required minlength="3" maxlength="255"
+                   autocomplete="email"/>
+        </div>
+        <div class="field">
+            <label th:text="${msg.t('profile.displayName')}">name</label>
+            <input name="displayName" required minlength="1" maxlength="255" autocomplete="name"/>
+        </div>
+        <div class="form-actions">
+            <button type="submit" class="btn" th:text="${msg.t('btn.register.submit')}">Sign up</button>
+            <a class="btn" th:href="@{/app/login}" th:text="${labelGoBack}">Back</a>
+        </div>
+    </form>
+</div>
 </body>
 </html>

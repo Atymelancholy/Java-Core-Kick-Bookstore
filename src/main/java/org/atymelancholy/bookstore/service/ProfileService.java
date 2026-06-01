@@ -10,17 +10,39 @@ import org.atymelancholy.bookstore.model.UserAccount;
  */
 public final class ProfileService {
 
+    /** DAO factory. */
     private final DaoFactory daoFactory;
 
-    public ProfileService(DaoFactory daoFactory) {
-        this.daoFactory = daoFactory;
+    /**
+     * Creates profile service.
+     *
+     * @param dao DAO factory
+     */
+    public ProfileService(final DaoFactory dao) {
+        this.daoFactory = dao;
     }
 
-    public Optional<UserAccount> refresh(long userId) {
+    /**
+     * Reload profile from DB.
+     *
+     * @param userId user id
+     * @return refreshed user account
+     */
+    public Optional<UserAccount> refresh(final long userId) {
         return daoFactory.users().findById(userId);
     }
 
-    public UserAccount update(long userId, String email, String displayName) {
+    /**
+     * Update profile.
+     *
+     * @param userId user id
+     * @param email email
+     * @param displayName display name
+     * @return updated user account
+     */
+    public UserAccount update(final long userId,
+                              final String email,
+                              final String displayName) {
         daoFactory.users().updateProfile(userId, email, displayName);
         return daoFactory.users().findById(userId).orElseThrow();
     }

@@ -10,7 +10,8 @@ import jakarta.servlet.http.HttpServletResponse;
 public final class HomeServlet extends BaseServlet {
 
     @Override
-    protected void doGet(HttpServletRequest req, HttpServletResponse resp) throws IOException {
+    protected void doGet(final HttpServletRequest req,
+                         final HttpServletResponse resp) throws IOException {
         resp.sendRedirect(req.getContextPath() + "/app/products");
     }
 }

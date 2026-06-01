@@ -1,6 +1,6 @@
--- Одноразовая перезаливка каталога книгами (PostgreSQL).
--- Выполните в pgAdmin / psql, если в products ещё «ноутбук», «кофе» и т.п. со старого seed.
--- Заказы и позиции заказов очищаются, пользователи не трогаются.
+-- One-off catalog reseed with books (PostgreSQL).
+-- Run in pgAdmin / psql if products still has old seed rows (laptop, coffee, etc.).
+-- Clears orders and catalog; users are left unchanged.
 
 TRUNCATE order_items, orders, products RESTART IDENTITY CASCADE;
 

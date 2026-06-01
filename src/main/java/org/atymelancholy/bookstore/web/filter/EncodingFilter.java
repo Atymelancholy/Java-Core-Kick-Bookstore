@@ -14,7 +14,9 @@ import jakarta.servlet.http.HttpServletResponse;
 public final class EncodingFilter extends HttpFilter {
 
     @Override
-    protected void doFilter(HttpServletRequest req, HttpServletResponse res, FilterChain chain)
+    protected void doFilter(final HttpServletRequest req,
+                            final HttpServletResponse res,
+                            final FilterChain chain)
             throws IOException, ServletException {
         req.setCharacterEncoding("UTF-8");
         res.setCharacterEncoding("UTF-8");

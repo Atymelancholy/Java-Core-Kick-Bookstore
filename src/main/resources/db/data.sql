@@ -1,4 +1,4 @@
--- UTF-8: стартовый каталог книжного магазина
+-- UTF-8: initial bookstore catalog seed
 INSERT INTO products (name, description, price_cents, stock) VALUES
 ('Чистая архитектура', 'Роберт Мартин. Перевод с англ. Учебник по проектированию.', 89000, 6),
 ('Designing Data-Intensive Applications', 'Martin Kleppmann. Distributed systems and data engineering.', 459900, 3),

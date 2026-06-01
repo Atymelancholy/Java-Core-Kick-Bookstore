@@ -7,6 +7,7 @@ import java.util.Map;
 import org.atymelancholy.bookstore.service.OrderService;
 import org.atymelancholy.bookstore.model.UserAccount;
 import org.atymelancholy.bookstore.service.AuthService;
+import org.atymelancholy.bookstore.web.util.ViewModel;
 import org.atymelancholy.bookstore.web.util.Views;
 
 import jakarta.servlet.ServletException;
@@ -18,8 +19,11 @@ import jakarta.servlet.http.HttpServletResponse;
 public final class OrdersServlet extends BaseServlet {
 
     @Override
-    protected void doGet(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
-        UserAccount user = AuthService.current(req.getSession(false)).orElseThrow();
+    protected void doGet(final HttpServletRequest req,
+                         final HttpServletResponse resp)
+            throws ServletException, IOException {
+        UserAccount user = AuthService.current(req.getSession(false))
+                .orElseThrow();
         int page = 0;
         try {
             String p = req.getParameter("page");
@@ -30,9 +34,10 @@ public final class OrdersServlet extends BaseServlet {
             page = 0;
         }
         long total = app().orders().orderCount(user.id());
-        int pages = (int) Math.ceil(total / (double) OrderService.PAGE_SIZE);
+        int pages = (int) Math.ceil(
+                total / (double) OrderService.PAGE_SIZE);
         Map<String, Object> m = new HashMap<>();
-        m.put("user", user);
+        ViewModel.putUser(m, req.getSession(false));
         m.put("orders", app().orders().listForUser(user.id(), page));
         m.put("page", page);
         m.put("totalPages", Math.max(1, pages));

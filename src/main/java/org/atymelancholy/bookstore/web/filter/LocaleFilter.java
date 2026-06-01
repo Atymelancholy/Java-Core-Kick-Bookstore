@@ -14,20 +14,27 @@ import jakarta.servlet.http.HttpServletResponse;
 import jakarta.servlet.http.HttpSession;
 
 /**
- * Picks UI language from {@code ?lang=} (supported: en, de, be, ru) and stores it in the session.
+ * Picks UI language from {@code ?lang=} (supported: en, be, ru) and stores
+ * it in the session.
  */
 public final class LocaleFilter extends HttpFilter {
 
+    /** Supported UI locales. */
     private static final List<Locale> SUPPORTED = List.of(
-            Locale.ENGLISH, Locale.GERMAN, Locale.of("be"), Locale.forLanguageTag("ru"));
+            Locale.ENGLISH,
+            Locale.forLanguageTag("ru"),
+            Locale.forLanguageTag("be"));
 
     @Override
-    protected void doFilter(HttpServletRequest req, HttpServletResponse res, FilterChain chain)
+    protected void doFilter(final HttpServletRequest req,
+                            final HttpServletResponse res,
+                            final FilterChain chain)
             throws IOException, ServletException {
         String lang = req.getParameter("lang");
         if (lang != null && !lang.isBlank()) {
             Locale chosen = Locale.forLanguageTag(lang.strip());
-            if (SUPPORTED.stream().anyMatch(l -> l.getLanguage().equalsIgnoreCase(chosen.getLanguage()))) {
+            if (SUPPORTED.stream().anyMatch(l -> l.getLanguage()
+                    .equalsIgnoreCase(chosen.getLanguage()))) {
                 HttpSession s = req.getSession(true);
                 s.setAttribute(WebKeys.LOCALE_SESSION, chosen);
             }

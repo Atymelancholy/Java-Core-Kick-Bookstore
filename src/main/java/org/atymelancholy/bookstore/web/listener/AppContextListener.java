@@ -4,6 +4,7 @@ import org.atymelancholy.bookstore.WebKeys;
 import org.atymelancholy.bookstore.config.DataSources;
 import org.atymelancholy.bookstore.config.SqlScripts;
 import org.atymelancholy.bookstore.dao.DaoFactory;
+import org.atymelancholy.bookstore.model.UserRoles;
 import org.atymelancholy.bookstore.service.AuthService;
 import org.atymelancholy.bookstore.service.OrderService;
 import org.atymelancholy.bookstore.service.ProductService;
@@ -21,19 +22,27 @@ import jakarta.servlet.ServletContextEvent;
 import jakarta.servlet.ServletContextListener;
 
 /**
- * Bootstraps datasource, schema, services, and Thymeleaf.
+ * Application bootstrap on container startup: DB pool, schema, demo data,
+ * services, Thymeleaf.
  */
 public final class AppContextListener implements ServletContextListener {
 
+    /** BCrypt cost factor for demo app. */
+    private static final int BCRYPT_COST = 10;
+
     @Override
-    public void contextInitialized(ServletContextEvent sce) {
+    public void contextInitialized(final ServletContextEvent sce) {
         var ds = DataSources.INSTANCE.get();
+        // Tables are created idempotently (IF NOT EXISTS)
         SqlScripts.runClasspath(ds, "db/schema.sql");
+        // Demo books are seeded only when the catalog is empty.
+        // Otherwise run db/reseed-books.sql manually.
         if (SqlScripts.countRows(ds, "products") == 0) {
             SqlScripts.runClasspath(ds, "db/data.sql");
         }
         var dao = new DaoFactory(ds);
-        var hasher = new BcryptHasher(10);
+        var hasher = new BcryptHasher(BCRYPT_COST);
+        seedAdminIfMissing(dao, hasher);
         var services = new AppServices(
                 new AuthService(dao, hasher),
                 new ProductService(dao),
@@ -41,8 +50,11 @@ public final class AppContextListener implements ServletContextListener {
                 new ProfileService(dao));
         sce.getServletContext().setAttribute(WebKeys.APP_SERVICES, services);
 
-        JakartaServletWebApplication jakartaApp = JakartaServletWebApplication.buildApplication(sce.getServletContext());
-        WebApplicationTemplateResolver resolver = new WebApplicationTemplateResolver(jakartaApp);
+        JakartaServletWebApplication jakartaApp =
+                JakartaServletWebApplication.buildApplication(
+                        sce.getServletContext());
+        WebApplicationTemplateResolver resolver =
+                new WebApplicationTemplateResolver(jakartaApp);
         resolver.setPrefix("/WEB-INF/templates/");
         resolver.setSuffix(".html");
         resolver.setTemplateMode(TemplateMode.HTML);
@@ -53,8 +65,22 @@ public final class AppContextListener implements ServletContextListener {
         sce.getServletContext().setAttribute(WebKeys.TEMPLATE_ENGINE, engine);
     }
 
+    private static void seedAdminIfMissing(final DaoFactory dao,
+                                           final BcryptHasher hasher) {
+        if (dao.users().findByLogin("admin").isEmpty()) {
+            dao.users().insert(
+                    "admin",
+                    hasher.hash("admin"),
+                    "admin@bookstore.local",
+                    "Administrator",
+                    UserRoles.ADMIN);
+            return;
+        }
+        dao.users().updateRoleByLogin("admin", UserRoles.ADMIN);
+    }
+
     @Override
-    public void contextDestroyed(ServletContextEvent sce) {
+    public void contextDestroyed(final ServletContextEvent sce) {
         ((HikariDataSource) DataSources.INSTANCE.get()).close();
     }
 }

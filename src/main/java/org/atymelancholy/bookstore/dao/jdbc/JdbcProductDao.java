@@ -14,34 +14,75 @@ import org.atymelancholy.bookstore.model.Product;
 
 public final class JdbcProductDao implements ProductDao {
 
+    /** 1st prepared-statement parameter index. */
+    private static final int PARAM_1 = 1;
+    /** 2nd prepared-statement parameter index. */
+    private static final int PARAM_2 = 2;
+    /** 3rd prepared-statement parameter index. */
+    private static final int PARAM_3 = 3;
+    /** 4th prepared-statement parameter index. */
+    private static final int PARAM_4 = 4;
+    /** 5th prepared-statement parameter index. */
+    private static final int PARAM_5 = 5;
+
+    /** JDBC data source. */
     private final DataSource dataSource;
 
-    public JdbcProductDao(DataSource dataSource) {
-        this.dataSource = dataSource;
+    /**
+     * Create JDBC DAO.
+     *
+     * @param ds data source
+     */
+    public JdbcProductDao(final DataSource ds) {
+        this.dataSource = ds;
     }
 
     @Override
     public List<Product> findAll() {
+        return findPage(Integer.MAX_VALUE, 0);
+    }
+
+    @Override
+    public List<Product> findPage(final int limit, final int offset) {
         try (Connection c = dataSource.getConnection();
              PreparedStatement ps = c.prepareStatement(
-                     "SELECT id, name, description, price_cents, stock FROM products ORDER BY id");
-             ResultSet rs = ps.executeQuery()) {
-            List<Product> list = new ArrayList<>();
-            while (rs.next()) {
-                list.add(map(rs));
+                     "SELECT id, name, description, price_cents, stock "
+                             + "FROM products ORDER BY id "
+                             + "LIMIT ? OFFSET ?")) {
+            ps.setInt(PARAM_1, limit);
+            ps.setInt(PARAM_2, offset);
+            try (ResultSet rs = ps.executeQuery()) {
+                List<Product> list = new ArrayList<>();
+                while (rs.next()) {
+                    list.add(map(rs));
+                }
+                return list;
             }
-            return list;
         } catch (Exception e) {
             throw new IllegalStateException(e);
         }
     }
 
     @Override
-    public Optional<Product> findById(long id) {
+    public long countAll() {
         try (Connection c = dataSource.getConnection();
              PreparedStatement ps = c.prepareStatement(
-                     "SELECT id, name, description, price_cents, stock FROM products WHERE id = ?")) {
-            ps.setLong(1, id);
+                     "SELECT COUNT(*) FROM products");
+             ResultSet rs = ps.executeQuery()) {
+            rs.next();
+            return rs.getLong(1);
+        } catch (Exception e) {
+            throw new IllegalStateException(e);
+        }
+    }
+
+    @Override
+    public Optional<Product> findById(final long id) {
+        try (Connection c = dataSource.getConnection();
+             PreparedStatement ps = c.prepareStatement(
+                     "SELECT id, name, description, price_cents, stock "
+                             + "FROM products WHERE id = ?")) {
+            ps.setLong(PARAM_1, id);
             try (ResultSet rs = ps.executeQuery()) {
                 if (rs.next()) {
                     return Optional.of(map(rs));
@@ -54,15 +95,20 @@ public final class JdbcProductDao implements ProductDao {
     }
 
     @Override
-    public long insert(String name, String description, int priceCents, int stock) {
+    public long insert(final String name,
+                       final String description,
+                       final int priceCents,
+                       final int stock) {
         try (Connection c = dataSource.getConnection();
              PreparedStatement ps = c.prepareStatement(
-                     "INSERT INTO products (name, description, price_cents, stock) VALUES (?,?,?,?)",
+                     "INSERT INTO products "
+                             + "(name, description, price_cents, stock) "
+                             + "VALUES (?,?,?,?)",
                      PreparedStatement.RETURN_GENERATED_KEYS)) {
-            ps.setString(1, name);
-            ps.setString(2, description);
-            ps.setInt(3, priceCents);
-            ps.setInt(4, stock);
+            ps.setString(PARAM_1, name);
+            ps.setString(PARAM_2, description);
+            ps.setInt(PARAM_3, priceCents);
+            ps.setInt(PARAM_4, stock);
             ps.executeUpdate();
             try (ResultSet keys = ps.getGeneratedKeys()) {
                 keys.next();
@@ -74,15 +120,20 @@ public final class JdbcProductDao implements ProductDao {
     }
 
     @Override
-    public void update(long id, String name, String description, int priceCents, int stock) {
+    public void update(final long id,
+                       final String name,
+                       final String description,
+                       final int priceCents,
+                       final int stock) {
         try (Connection c = dataSource.getConnection();
              PreparedStatement ps = c.prepareStatement(
-                     "UPDATE products SET name=?, description=?, price_cents=?, stock=? WHERE id=?")) {
-            ps.setString(1, name);
-            ps.setString(2, description);
-            ps.setInt(3, priceCents);
-            ps.setInt(4, stock);
-            ps.setLong(5, id);
+                     "UPDATE products SET name=?, description=?, "
+                             + "price_cents=?, stock=? WHERE id=?")) {
+            ps.setString(PARAM_1, name);
+            ps.setString(PARAM_2, description);
+            ps.setInt(PARAM_3, priceCents);
+            ps.setInt(PARAM_4, stock);
+            ps.setLong(PARAM_5, id);
             int n = ps.executeUpdate();
             if (n != 1) {
                 throw new IllegalStateException("product not found");
@@ -93,17 +144,18 @@ public final class JdbcProductDao implements ProductDao {
     }
 
     @Override
-    public void delete(long id) {
+    public void delete(final long id) {
         try (Connection c = dataSource.getConnection();
-             PreparedStatement ps = c.prepareStatement("DELETE FROM products WHERE id=?")) {
-            ps.setLong(1, id);
+             PreparedStatement ps = c.prepareStatement(
+                     "DELETE FROM products WHERE id=?")) {
+            ps.setLong(PARAM_1, id);
             ps.executeUpdate();
         } catch (Exception e) {
             throw new IllegalStateException(e);
         }
     }
 
-    private static Product map(ResultSet rs) throws Exception {
+    private static Product map(final ResultSet rs) throws Exception {
         return new Product(
                 rs.getLong("id"),
                 rs.getString("name"),

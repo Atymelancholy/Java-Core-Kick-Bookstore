@@ -5,50 +5,302 @@
     <meta name="viewport" content="width=device-width, initial-scale=1"/>
     <title th:text="${msg.t('products.title')}">products</title>
     <style>
-        body { font-family: system-ui, sans-serif; max-width: 960px; margin: 1rem auto; }
-        .nav { display: flex; gap: 1rem; flex-wrap: wrap; align-items: center; margin-bottom: 1rem; }
+        body {
+            font-family: system-ui, sans-serif;
+            max-width: min(1200px, 96vw);
+            margin: 1rem auto;
+            padding: 0 1.25rem;
+        }
         .flash { color: #b00020; margin-bottom: 1rem; }
-        table { border-collapse: collapse; width: 100%; }
-        th, td { border: 1px solid #ccc; padding: .4rem .5rem; vertical-align: top; }
-        th { text-align: left; background: #f5f5f5; }
-        .row-actions { white-space: nowrap; }
-        form.inline { display: inline; }
+        .catalog-table {
+            table-layout: fixed;
+            width: 100%;
+            border-collapse: collapse;
+            border: 1px solid #bbb;
+            background: #fff;
+        }
+        .catalog-table thead th {
+            background: #f0f0f0;
+            font-weight: 600;
+            text-align: left;
+            padding: 0.65rem 0.75rem;
+            border-bottom: 2px solid #bbb;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+        .catalog-table tbody td {
+            padding: 0.55rem 0.75rem;
+            border: none;
+            vertical-align: top;
+            text-align: left;
+        }
+        .catalog-table tbody tr {
+            background-image: linear-gradient(#e2e2e2, #e2e2e2);
+            background-size: 100% 1px;
+            background-position: left bottom;
+            background-repeat: no-repeat;
+        }
+        .catalog-table tbody tr:last-child {
+            background-image: none;
+        }
+        .catalog-table .cell-name {
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+        .catalog-table .col-price,
+        .catalog-table .col-stock {
+            white-space: nowrap;
+            font-variant-numeric: tabular-nums;
+        }
+        .desc-open {
+            display: block;
+            width: 100%;
+            text-align: left;
+            font: inherit;
+            font-size: inherit;
+            line-height: 1.35;
+            padding: 0;
+            border: none;
+            background: none;
+            color: #1a56db;
+            cursor: pointer;
+            text-decoration: underline;
+            text-underline-offset: 2px;
+        }
+        .desc-open:hover { color: #0f3d99; }
+        .desc-open:disabled {
+            color: #888;
+            cursor: default;
+            text-decoration: none;
+        }
+        .desc-empty { color: #888; }
+        #desc-dialog {
+            position: relative;
+            max-width: min(32rem, 92vw);
+            padding: 1.25rem 2rem 1.25rem 1.5rem;
+            border: 1px solid #bbb;
+            border-radius: 8px;
+        }
+        #desc-dialog::backdrop { background: rgba(0, 0, 0, 0.35); }
+        #desc-dialog h2 { margin: 0 2rem 0.75rem 0; font-size: 1.1rem; }
+        #desc-dialog-body {
+            margin: 0;
+            white-space: pre-wrap;
+            line-height: 1.45;
+            max-height: 60vh;
+            overflow-y: auto;
+        }
+        #desc-dialog-close {
+            position: absolute;
+            top: 0.5rem;
+            right: 0.5rem;
+            width: 2rem;
+            height: 2rem;
+            font: inherit;
+            font-size: 1.35rem;
+            line-height: 1;
+            padding: 0;
+            border: none;
+            border-radius: 4px;
+            background: transparent;
+            color: #555;
+            cursor: pointer;
+        }
+        #desc-dialog-close:hover {
+            background: #eee;
+            color: #000;
+        }
+        .catalog-table .cell-actions-inner {
+            display: flex;
+            flex-wrap: nowrap;
+            align-items: center;
+            justify-content: flex-start;
+            gap: 0.4rem;
+        }
+        .catalog-table .action-form {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.35rem;
+            margin: 0;
+        }
+        .catalog-table .qty-input {
+            width: 3.25rem;
+            padding: 0.35rem 0.4rem;
+            font: inherit;
+            font-size: 0.875rem;
+            border: 1px solid #aaa;
+            border-radius: 4px;
+            box-sizing: border-box;
+        }
+        .btn-action {
+            display: inline-block;
+            font: inherit;
+            font-size: 0.875rem;
+            line-height: 1.25;
+            padding: 0.4rem 0.7rem;
+            border: 1px solid #888;
+            border-radius: 4px;
+            background: #f4f4f4;
+            color: #222;
+            text-decoration: none;
+            cursor: pointer;
+            white-space: nowrap;
+            box-sizing: border-box;
+        }
+        .btn-action:hover { background: #e8e8e8; }
+        button.btn-action { margin: 0; }
+        .pager {
+            margin-top: 1.25rem;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 0.5rem;
+        }
+        .pager-pages {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: center;
+            align-items: center;
+            gap: 0.35rem 0.6rem;
+        }
+        .pager a {
+            text-decoration: none;
+            color: #333;
+            padding: 0.2rem 0.45rem;
+            border-radius: 4px;
+            min-width: 1.5rem;
+            text-align: center;
+        }
+        .pager a:hover { background: #eee; }
+        .pager a.current {
+            font-weight: 700;
+            background: #ddd;
+            pointer-events: none;
+        }
+        .pager-meta { color: #555; text-align: center; }
     </style>
 </head>
 <body>
 <div th:replace="~{fragments :: navbar}"></div>
 <p class="flash" th:if="${flash != null}" th:text="${msg.t(flash)}"></p>
-<h1 th:text="${msg.t('products.title')}">Products</h1>
-<table>
+
+<table class="catalog-table">
+    <colgroup th:if="${user != null and user.role == 'ADMIN'}">
+        <col style="width: 16%;"/>
+        <col style="width: 26%;"/>
+        <col style="width: 11%;"/>
+        <col style="width: 9%;"/>
+        <col style="width: 38%;"/>
+    </colgroup>
+    <colgroup th:if="${user != null and user.role != 'ADMIN'}">
+        <col style="width: 20%;"/>
+        <col style="width: 34%;"/>
+        <col style="width: 12%;"/>
+        <col style="width: 10%;"/>
+        <col style="width: 24%;"/>
+    </colgroup>
+    <colgroup th:if="${user == null}">
+        <col style="width: 22%;"/>
+        <col style="width: 48%;"/>
+        <col style="width: 15%;"/>
+        <col style="width: 15%;"/>
+    </colgroup>
     <thead>
     <tr>
         <th th:text="${msg.t('product.name')}">name</th>
         <th th:text="${msg.t('product.description')}">desc</th>
-        <th th:text="${msg.t('price.cents')}">price</th>
-        <th th:text="${msg.t('stock')}">st</th>
-        <th th:if="${user != null}" th:text="${msg.t('actions')}">act</th>
+        <th class="col-price" th:text="${msg.t('price.byn')}">price</th>
+        <th class="col-stock" th:text="${msg.t('stock')}">st</th>
+        <th th:if="${user != null}" class="col-actions" th:text="${msg.t('actions')}">act</th>
     </tr>
     </thead>
     <tbody>
     <tr th:each="p : ${products}">
-        <td th:text="${p.name}">n</td>
-        <td th:text="${p.description}">d</td>
-        <td th:text="${p.priceCents}">0</td>
-        <td th:text="${p.stock}">0</td>
-        <td th:if="${user != null}" class="row-actions">
-            <form th:action="@{/app/orders/create}" method="post" class="inline">
-                <input type="hidden" name="productId" th:value="${p.id}"/>
-                <input name="quantity" type="number" min="1" max="999" value="1" required style="width:4rem"/>
-                <button type="submit" th:text="${msg.t('order.place')}">buy</button>
-            </form>
-            <a th:href="@{/app/products/form(id=${p.id})}" th:text="${msg.t('product.edit')}">e</a>
-            <form th:action="@{/app/products/delete}" method="post" class="inline" onsubmit="return confirm('OK?');">
-                <input type="hidden" name="id" th:value="${p.id}"/>
-                <button type="submit" th:text="${msg.t('product.delete')}">x</button>
-            </form>
+        <td class="cell-name" th:text="${p.name}" th:title="${p.name}">n</td>
+        <td class="cell-desc">
+            <span th:if="${#strings.isEmpty(p.description)}" class="desc-empty">—</span>
+            <button th:if="${!#strings.isEmpty(p.description)}"
+                    type="button"
+                    class="desc-open"
+                    th:attr="data-desc=${p.description}, data-title=${p.name}"
+                    th:text="${#strings.length(p.description) > 70
+                        ? #strings.substring(p.description, 0, 70) + '…'
+                        : p.description}">
+                preview
+            </button>
+        </td>
+        <td class="col-price" th:text="${msg.priceByn(p.priceCents)}">0</td>
+        <td class="col-stock" th:text="${p.stock}">0</td>
+        <td th:if="${user != null}" class="cell-actions col-actions">
+            <div class="cell-actions-inner" th:if="${user.role == 'ADMIN'}">
+                <form th:action="@{/app/orders/create}" method="post" class="action-form">
+                    <input type="hidden" name="productId" th:value="${p.id}"/>
+                    <input name="quantity" type="number" min="1" max="999" value="1" required class="qty-input"/>
+                    <button type="submit" class="btn-action" th:text="${msg.t('order.place')}">buy</button>
+                </form>
+                <a th:href="@{/app/products/form(id=${p.id})}"
+                   class="btn-action"
+                   th:text="${msg.t('product.edit')}">edit</a>
+                <form th:action="@{/app/products/delete}" method="post" class="action-form"
+                      th:attr="data-confirm=${msg.t('product.delete.confirm')}"
+                      onsubmit="return confirm(this.getAttribute('data-confirm'));">
+                    <input type="hidden" name="id" th:value="${p.id}"/>
+                    <button type="submit" class="btn-action" th:text="${msg.t('product.delete')}">del</button>
+                </form>
+            </div>
+            <div class="cell-actions-inner" th:if="${user.role != 'ADMIN'}">
+                <form th:action="@{/app/orders/create}" method="post" class="action-form">
+                    <input type="hidden" name="productId" th:value="${p.id}"/>
+                    <input name="quantity" type="number" min="1" max="999" value="1" required class="qty-input"/>
+                    <button type="submit" class="btn-action" th:text="${msg.t('order.place')}">buy</button>
+                </form>
+            </div>
         </td>
     </tr>
     </tbody>
 </table>
+
+<dialog id="desc-dialog">
+    <button type="button" id="desc-dialog-close" aria-label="Close">×</button>
+    <h2 id="desc-dialog-title"></h2>
+    <p id="desc-dialog-body"></p>
+</dialog>
+
+<nav class="pager" th:if="${totalPages > 0}" aria-label="Catalog pages">
+    <span class="pager-meta">
+        <span th:text="${msg.t('catalog.page')}">Page</span>
+        <span th:text="${page + 1}">1</span>
+        <span th:text="${msg.t('catalog.of')}">of</span>
+        <span th:text="${totalPages}">1</span>
+    </span>
+    <div class="pager-pages">
+        <a th:each="i : ${#numbers.sequence(0, totalPages - 1)}"
+           th:href="@{/app/products(page=${i})}"
+           th:text="${i + 1}"
+           th:classappend="${i == page} ? ' current'">1</a>
+    </div>
+</nav>
+
+<script>
+(function () {
+    var dialog = document.getElementById('desc-dialog');
+    var titleEl = document.getElementById('desc-dialog-title');
+    var bodyEl = document.getElementById('desc-dialog-body');
+    var closeBtn = document.getElementById('desc-dialog-close');
+    document.querySelectorAll('.desc-open').forEach(function (btn) {
+        btn.addEventListener('click', function () {
+            titleEl.textContent = btn.getAttribute('data-title') || '';
+            bodyEl.textContent = btn.getAttribute('data-desc') || '';
+            dialog.showModal();
+        });
+    });
+    closeBtn.addEventListener('click', function () { dialog.close(); });
+    dialog.addEventListener('click', function (e) {
+        if (e.target === dialog) { dialog.close(); }
+    });
+})();
+</script>
 </body>
 </html>

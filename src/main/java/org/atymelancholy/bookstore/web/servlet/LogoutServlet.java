@@ -12,8 +12,11 @@ import jakarta.servlet.http.HttpServletResponse;
 public final class LogoutServlet extends BaseServlet {
 
     @Override
-    protected void doPost(HttpServletRequest req, HttpServletResponse resp) throws IOException {
-        AuthService.current(req.getSession(false)).ifPresent(u -> app().auth().signOut(req.getSession(false)));
+    protected void doPost(final HttpServletRequest req,
+                          final HttpServletResponse resp)
+            throws IOException {
+        AuthService.current(req.getSession(false))
+                .ifPresent(u -> app().auth().signOut(req.getSession(false)));
         resp.sendRedirect(req.getContextPath() + "/app/products");
     }
 }

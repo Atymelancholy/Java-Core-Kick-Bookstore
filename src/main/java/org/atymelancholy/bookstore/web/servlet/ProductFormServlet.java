@@ -7,9 +7,9 @@ import java.util.Map;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.atymelancholy.bookstore.model.Product;
-import org.atymelancholy.bookstore.model.UserAccount;
-import org.atymelancholy.bookstore.service.AuthService;
 import org.atymelancholy.bookstore.service.DomainException;
+import org.atymelancholy.bookstore.web.util.Authz;
+import org.atymelancholy.bookstore.web.util.ViewModel;
 import org.atymelancholy.bookstore.web.util.Views;
 
 import jakarta.servlet.ServletException;
@@ -20,64 +20,109 @@ import jakarta.servlet.http.HttpServletResponse;
 @WebServlet("/app/products/form")
 public final class ProductFormServlet extends BaseServlet {
 
-    private static final Logger LOG = LogManager.getLogger(ProductFormServlet.class);
+    /** Upper bound for price in cents. */
+    private static final int MAX_PRICE_CENTS = 10_000_000;
+    /** Upper bound for stock quantity. */
+    private static final int MAX_STOCK = 1_000_000;
+
+    /** Logger. */
+    private static final Logger LOG =
+            LogManager.getLogger(ProductFormServlet.class);
 
     @Override
-    protected void doGet(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
-        UserAccount user = AuthService.current(req.getSession(false)).orElseThrow();
-        Map<String, Object> m = new HashMap<>();
-        m.put("user", user);
-        String idRaw = req.getParameter("id");
-        if (idRaw == null || idRaw.isBlank()) {
-            m.put("product", null);
-        } else {
-            try {
-                long id = Long.parseLong(idRaw.strip());
-                Product p = app().products().find(id).orElseThrow();
-                m.put("product", p);
-            } catch (Exception e) {
-                resp.sendRedirect(req.getContextPath() + "/app/products");
-                return;
+    protected void doGet(final HttpServletRequest req,
+                         final HttpServletResponse resp)
+            throws ServletException, IOException {
+        try {
+            Authz.requireAdmin(req.getSession(false));
+            Map<String, Object> m = new HashMap<>();
+            ViewModel.putUser(m, req.getSession(false));
+            String idRaw = req.getParameter("id");
+            if (idRaw == null || idRaw.isBlank()) {
+                m.put("product", null);
+            } else {
+                try {
+                    long id = Long.parseLong(idRaw.strip());
+                    Product p = app().products().find(id).orElseThrow();
+                    m.put("product", p);
+                } catch (Exception e) {
+                    resp.sendRedirect(req.getContextPath() + "/app/products");
+                    return;
+                }
             }
+            Views.render(getServletContext(), req, resp, "product-form", m);
+        } catch (DomainException e) {
+            req.getSession(true).setAttribute("flashProducts", e.messageKey());
+            resp.sendRedirect(req.getContextPath() + "/app/products");
         }
-        Views.render(getServletContext(), req, resp, "product-form", m);
     }
 
     @Override
-    protected void doPost(HttpServletRequest req, HttpServletResponse resp) throws IOException {
+    protected void doPost(final HttpServletRequest req,
+                          final HttpServletResponse resp)
+            throws IOException {
         try {
-            AuthService.current(req.getSession(false)).orElseThrow();
+            Authz.requireAdmin(req.getSession(false));
             String idRaw = req.getParameter("id");
-            String name = require(req.getParameter("name"), "error.validation.name");
+            String name = require(
+                    req.getParameter("name"), "error.validation.name");
             String rawDesc = req.getParameter("description");
             String description = rawDesc == null ? "" : rawDesc.strip();
-            int priceCents = parseInt(req.getParameter("priceCents"), 1, 10_000_000, "error.validation.price");
-            int stock = parseInt(req.getParameter("stock"), 0, 1_000_000, "error.validation.stock");
+            int priceCents = parsePriceByn(req.getParameter("priceByn"));
+            int stock = parseInt(
+                    req.getParameter("stock"),
+                    0,
+                    MAX_STOCK,
+                    "error.validation.stock");
             if (idRaw == null || idRaw.isBlank()) {
-                app().products().create(name, description, priceCents, stock);
+                app().products().create(
+                        name, description, priceCents, stock);
             } else {
                 long id = Long.parseLong(idRaw.strip());
-                app().products().update(id, name, description, priceCents, stock);
+                app().products().update(
+                        id, name, description, priceCents, stock);
             }
             resp.sendRedirect(req.getContextPath() + "/app/products");
         } catch (DomainException e) {
             req.getSession(true).setAttribute("flashProducts", e.messageKey());
             resp.sendRedirect(req.getContextPath() + "/app/products");
+            return;
         } catch (Exception e) {
             LOG.error("product form", e);
-            req.getSession(true).setAttribute("flashProducts", "error.internal");
+            req.getSession(true).setAttribute(
+                    "flashProducts", "error.internal");
             resp.sendRedirect(req.getContextPath() + "/app/products");
         }
     }
 
-    private static String require(String v, String err) {
+    private static String require(final String v, final String err) {
         if (v == null || v.isBlank()) {
             throw new DomainException(err);
         }
         return v.strip();
     }
 
-    private static int parseInt(String raw, int min, int max, String err) {
+    private static int parsePriceByn(final String raw) {
+        try {
+            String s = raw == null ? "" : raw.strip().replace(',', '.');
+            double byn = Double.parseDouble(s);
+            if (byn < 0.01 || byn > MAX_PRICE_CENTS / 100.0) {
+                throw new DomainException("error.validation.price");
+            }
+            long cents = Math.round(byn * 100);
+            if (cents < 1 || cents > MAX_PRICE_CENTS) {
+                throw new DomainException("error.validation.price");
+            }
+            return (int) cents;
+        } catch (NumberFormatException e) {
+            throw new DomainException("error.validation.price");
+        }
+    }
+
+    private static int parseInt(final String raw,
+                                final int min,
+                                final int max,
+                                final String err) {
         try {
             int v = Integer.parseInt(raw == null ? "" : raw.strip());
             if (v < min || v > max) {
