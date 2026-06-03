@@ -22,8 +22,8 @@ import jakarta.servlet.ServletContextEvent;
 import jakarta.servlet.ServletContextListener;
 
 /**
- * Application bootstrap on container startup: DB pool, schema, demo data,
- * services, Thymeleaf.
+ * Application bootstrap on container startup: DB pool, schema, services,
+ * Thymeleaf.
  */
 public final class AppContextListener implements ServletContextListener {
 
@@ -35,11 +35,6 @@ public final class AppContextListener implements ServletContextListener {
         var ds = DataSources.INSTANCE.get();
         // Tables are created idempotently (IF NOT EXISTS)
         SqlScripts.runClasspath(ds, "db/schema.sql");
-        // Demo books are seeded only when the catalog is empty.
-        // Otherwise run db/reseed-books.sql manually.
-        if (SqlScripts.countRows(ds, "products") == 0) {
-            SqlScripts.runClasspath(ds, "db/data.sql");
-        }
         var dao = new DaoFactory(ds);
         var hasher = new BcryptHasher(BCRYPT_COST);
         seedAdminIfMissing(dao, hasher);

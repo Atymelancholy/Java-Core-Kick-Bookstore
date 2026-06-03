@@ -6,7 +6,6 @@ import java.util.Map;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-import org.atymelancholy.bookstore.service.AuthService;
 import org.atymelancholy.bookstore.web.util.ViewModel;
 import org.atymelancholy.bookstore.web.util.Views;
 

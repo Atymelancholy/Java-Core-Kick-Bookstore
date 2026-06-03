@@ -5,7 +5,6 @@ import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.nio.charset.StandardCharsets;
 import java.sql.Connection;
-import java.sql.ResultSet;
 import java.sql.Statement;
 import java.util.stream.Collectors;
 
@@ -15,7 +14,7 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
 /**
- * Runs SQL scripts from the classpath (schema, seed data).
+ * Runs SQL scripts from the classpath (for example {@code db/schema.sql}).
  * <p>Statements are split on semicolons; each non-empty part is executed
  * separately.</p>
  */
@@ -25,33 +24,6 @@ public final class SqlScripts {
     private static final Logger LOG = LogManager.getLogger(SqlScripts.class);
 
     private SqlScripts() {
-    }
-
-    /**
-     * Returns the row count for a table.
-     * <p>Table name must contain only letters, digits, and underscores;
-     * it is supplied from application code.</p>
-     *
-     * @param ds connection pool
-     * @param table table name
-     * @return number of rows in the table
-     */
-    public static long countRows(final DataSource ds, final String table) {
-        if (!table.chars().allMatch(ch -> Character.isLetterOrDigit(ch)
-                || ch == '_')) {
-            throw new IllegalArgumentException("invalid table: " + table);
-        }
-        try (Connection c = ds.getConnection();
-             Statement st = c.createStatement()) {
-            try (ResultSet rs = st.executeQuery(
-                    "SELECT COUNT(*) FROM " + table)) {
-                rs.next();
-                return rs.getLong(1);
-            }
-        } catch (Exception e) {
-            LOG.error("countRows {}", table, e);
-            throw new IllegalStateException(e);
-        }
     }
 
     /**

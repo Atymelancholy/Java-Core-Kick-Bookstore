@@ -8,7 +8,6 @@ import java.util.Optional;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.atymelancholy.bookstore.model.UserAccount;
-import org.atymelancholy.bookstore.service.AuthService;
 import org.atymelancholy.bookstore.service.DomainException;
 import org.atymelancholy.bookstore.web.util.FormValidation;
 import org.atymelancholy.bookstore.web.util.ViewModel;
